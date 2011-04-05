@@ -5,8 +5,7 @@
 enum events { ARIVAL, DEPARTURE, DIRECTION_SELECT };
 
 enum abs_directions { WEST_LEFT, WEST_STRAIGHT, WEST_RIGHT, EAST_LEFT, EAST_STRAIGHT, EAST_RIGHT, NORTH_LEFT, NORTH_STRAIGHT, NORTH_RIGHT, SOUTH_LEFT, SOUTH_STRAIGHT, SOUTH_RIGHT }; 
-enum card_directions { NORTH, SOUTH, EAST, WEST };
-enum relt_directions { LEFT, STRAIGHT, RIGHT };
+enum ariv_dept {IN, OUT};
 
 
 typedef struct {
@@ -17,40 +16,16 @@ typedef struct {
 typedef struct {
 	int x_to_go;
 	int y_to_go;
-	int prev_intersection;
+	int sent_back;
 	int prev_prev_intersection;
 	enum abs_directions arrived_from;
-	enum card_directions card_lane;
-	enum relt_directions relt_lane;
+	enum abs_directions current_lane;
+	enum ariv_dept in_out;
 } car;
 
 typedef struct {
 	int total_cars_arrived;
-	car[5] in_west_left;
-	car[5] in_west_straight;
-	car[5] in_west_right;
-	car[5] in_north_left;
-	car[5] in_north_straight;
-	car[5] in_north_right;
-	car[5] in_south_left;
-	car[5] in_south_straight;
-	car[5] in_south_right;
-	car[5] in_east_left;
-	car[5] in_east_straight;
-	car[5] in_east_right;
-	car[5] out_west_left;
-	car[5] out_west_straight;
-	car[5] out_west_right;
-	car[5] out_north_left;
-	car[5] out_north_straight;
-	car[5] out_north_right;
-	car[5] out_south_left;
-	car[5] out_south_straight;
-	car[5] out_south_right;
-	car[5] out_east_left;
-	car[5] out_east_straight;
-	car[5] out_east_right;
-	
+
 	int num_in_west_left;
 	int num_in_west_straight;
 	int num_in_west_right;
@@ -172,47 +147,60 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 		// Schedule a departure in the future
 		SV->totalCarsArived++;
 		
-		switch(M->car->	enum directions arrived_from){
+		switch(M->car->current_lane){
 		
 		case WEST_LEFT:
-			in_west_left[num_in_west_left] = M->car;
+			num_in_east_left++;	
+			M->car->current_lane = EAST_LEFT;
 		break;
 		case WEST_STRAIGHT:
-		
+			num_in_east_straight++;	
+			M->car->current_lane = EAST_STRAIGHT;
 		break;
 		case WEST_RIGHT: 
-		
+			num_in_east_right++;
+			M->car->current_lane = EAST_RIGHT;
 		break;
 		case EAST_LEFT: 
-		
+			num_in_west_left++;
+			M->car->current_lane = WEST_LEFT;
 		break;
 		case EAST_STRAIGHT: 
-		
+			num_in_west_straight++;
+			M->car->current_lane = WEST_STRAIGHT;
 		break;
 		case EAST_RIGHT: 
-		
+			num_in_west_right++;
+			M->car->current_lane = WEST_RIGHT;
 		break;
 		case NORTH_LEFT: 
-		
+			num_in_south_left++;
+			M->car->current_lane = SOUTH_LEFT;
 		break;
 		case NORTH_STRAIGHT: 
-		
+			num_in_south_straight++;
+			M->car->current_lane = SOUTH_STRAIGHT;
 		break;
 		case NORTH_RIGHT: 
-		
+			num_in_south_right++;
+			M->car->current_lane = SOUTH_RIGHT;
 		break;
 		case SOUTH_LEFT:
-		
+			num_in_north_left++;
+			M->car->current_lane = NORTH_LEFT;	
 		break; 
 		case SOUTH_STRAIGHT:
-		
+			num_in_north_straight++;
+			M->car->current_lane = NORTH_STRAIGHT;
 		break; 
 		case SOUTH_RIGHT
-		
+			num_in_north_right++;
+			M->car->current_lane = NORTH_RIGHT;
 		break;
-		
-		
 		}
+
+		M->car->in_out = IN;
+
 		ts = tw_rand_exponential(lp->id, R);
 		CurEvent = tw_event_new(lp, ts, lp);
 		NewM = (Msg_Data *)tw_event_data(CurEvent);
@@ -234,54 +222,88 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 
 	case DIRECTION_SELECT:
 
-		switch( M->car->card_lane ){
-			case NORTH:
-				switch( M->car->relt_lane ){
-					case LEFT:
-						int i;
-						if(abs(M->car->x_to_go) > abs(M->car->y_to_go) && M->car->y_to_go < 0 && num_out_east_right < 5){
-							out_east_right[num_out_east_right] = M->car;
-							num_out_east_right++;
-						}
-						else if(abs(M->car->x_to_go) > abs(M->car->y_to_go) && M->car->y_to_go > 0 && num_out_east_left < 5){
-							out_east_left[num_out_east_left] = M->car;
-							num_out_east_left++;
-						}
-						else if( num_out_east_straight < 5 ){
-							out_east_straight[num_out_east_straight] = M->car;
-							num_out_east_straight++;
-						}
-						else {
-							out_north_left[num_out_north_left] = M->car;
-							num_out_north_left++;						
-						}
-						for(i = 1; i < num_in_north_left; i++){
-							in_north_left[i-1] = in_north_left[i];
-						}
-						num_in_north_left--;
-					break;
-					case STRAIGHT:
-					
-					break;
-					case RIGHT:
-					
-					break;
+		enum abs_directions temp_direction = M->car->current_lane;
+
+		switch(M->car->current_lane){
+			case EAST_LEFT:
+				if(M->car->y_to_go < 0 && num_out_south_straight < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_STRAIGHT;
+					num_out_south_straight ++;
+					M->car->sent_back = 0;
 				}
-			
+				else if(M->car->x_to_go < 0 && num_out_south_right < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_RIGHT;
+					num_out_south_right ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->x_to_go > 0 && num_out_south_left < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_LEFT;
+					num_out_south_left ++;
+					M->car->sent_back = 0;
+				}
+				else{
+					if(M->car->arrived_from == SOUTH_LEFT){
+						M->car->current_lane = EAST_RIGHT;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == EAST_STRAIGHT){
+						M->car->current_lane = EAST_STRAIGHT;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == NORTH_RIGHT){
+						M->car->current_lane = EAST_LEFT;
+						M->car->sent_back++;
+					}
+				}
 			break;
-			case SOUTH:
-			
+			case EAST_STRAIGHT:
+
+
 			break;
-			case EAST:
-			
+			case EAST_RIGHT: 
+
+
 			break;
-			
-			case WEST:
-			
+			case WEST_LEFT: 
+
+
+			break;
+			case WEST_STRAIGHT: 
+
+
+			break;
+			case WEST_RIGHT: 
+
+
+			break;
+			case NORTH_LEFT: 
+
+
+			break;
+			case NORTH_STRAIGHT: 
+
+
+			break;
+			case NORTH_RIGHT: 
+
+
+			break;
+			case SOUTH_LEFT:
+
+
+			break; 
+			case SOUTH_STRAIGHT:
+
+
+			break; 
+			case SOUTH_RIGHT
+
+
 			break;
 		}
 
-		break;
+		M->car->arrived_from = temp_direction;
+		M->car->in_out = OUT;
 	}
 }
 
