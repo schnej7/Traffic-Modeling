@@ -297,8 +297,39 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 
 			break;
 			case EAST_RIGHT: 
-
-
+			num_in_right_left--;
+				if(M->car->y_to_go > 0 && num_out_north_straight < MAX_CARS_ON_ROAD){
+					M->car->current_lane = NORTH_STRAIGHT;
+					num_out_north_straight ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->x_to_go > 0 && num_out_north_right < MAX_CARS_ON_ROAD){
+					M->car->current_lane = NORTH_RIGHT;
+					num_out_north_right ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->x_to_go < 0 && num_out_north_left < MAX_CARS_ON_ROAD){
+					M->car->current_lane = NORTH_LEFT;
+					num_out_north_left ++;
+					M->car->sent_back = 0;
+				}
+				else{
+					if(M->car->arrived_from == SOUTH_LEFT){
+						M->car->current_lane = EAST_RIGHT;
+						num_out_east_right++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == EAST_STRAIGHT){
+						M->car->current_lane = EAST_STRAIGHT;
+						num_out_east_straight++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == NORTH_RIGHT){
+						M->car->current_lane = EAST_LEFT;
+						num_out_east_left++;
+						M->car->sent_back++;
+					}
+				}
 			break;
 			case WEST_LEFT:
 				num_in_west_left--;
@@ -371,8 +402,39 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 				}
 			break;
 			case WEST_RIGHT: 
-
-
+				num_in_west_right--;
+				if(M->car->y_to_go < 0 && num_out_south_straight < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_STRAIGHT;
+					num_out_south_straight ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->x_to_go > 0 && num_out_south_left < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_LEFT;
+					num_out_south_left ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->x_to_go < 0 && num_out_south_right < MAX_CARS_ON_ROAD){
+					M->car->current_lane = SOUTH_RIGHT;
+					num_out_south_right ++;
+					M->car->sent_back = 0;
+				}
+				else{
+					if(M->car->arrived_from == SOUTH_RIGHT){
+						M->car->current_lane = WEST_LEFT;
+						num_out_west_left++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == WEST_STRAIGHT){
+						M->car->current_lane = WEST_STRAIGHT;
+						num_out_west_straight++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == NORTH_LEFT){
+						M->car->current_lane = WEST_RIGHT;
+						num_out_west_right++;
+						M->car->sent_back++;
+					}
+				}
 			break;
 			case NORTH_LEFT: 
 				num_in_north_left--;
@@ -446,8 +508,39 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 				}
 			break;
 			case NORTH_RIGHT: 
-
-
+				num_in_north_right--;
+				if(M->car->x_to_go < 0 && num_out_west_straight < MAX_CARS_ON_ROAD){
+					M->car->current_lane = WEST_STRAIGHT;
+					num_out_west_straight ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->y_to_go < 0 && num_out_west_left < MAX_CARS_ON_ROAD){
+					M->car->current_lane = WEST_LEFT;
+					num_out_west_left ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->y_to_go > 0 && num_out_west_right < MAX_CARS_ON_ROAD){
+					M->car->current_lane = WEST_RIGHT;
+					num_out_west_right ++;
+					M->car->sent_back = 0;
+				}
+				else{
+					if(M->car->arrived_from == WEST_RIGHT){
+						M->car->current_lane = NORTH_LEFT;
+						num_out_north_left++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == NORTH_STRAIGHT){
+						M->car->current_lane = NORTH_STRAIGHT;
+						num_out_north_straight++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == EAST_LEFT){
+						M->car->current_lane = NORTH_RIGHT;
+						num_out_north_right++;
+						M->car->sent_back++;
+					}
+				}
 			break;
 			case SOUTH_LEFT:
 				num_in_south_left--;
@@ -521,8 +614,39 @@ void Intersection_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M, t
 				}
 			break; 
 			case SOUTH_RIGHT
-
-
+				num_in_south_right--;
+				if(M->car->x_to_go > 0 && num_out_east_straight < MAX_CARS_ON_ROAD){
+					M->car->current_lane = EAST_STRAIGHT;
+					num_out_east_straight ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->y_to_go > 0 && num_out_east_left < MAX_CARS_ON_ROAD){
+					M->car->current_lane = EAST_LEFT;
+					num_out_east_left ++;
+					M->car->sent_back = 0;
+				}
+				else if(M->car->y_to_go < 0 && num_out_east_right < MAX_CARS_ON_ROAD){
+					M->car->current_lane = EAST_RIGHT;
+					num_out_east_right ++;
+					M->car->sent_back = 0;
+				}
+				else{
+					if(M->car->arrived_from == EAST_RIGHT){
+						M->car->current_lane = SOUTH_LEFT;
+						num_out_south_left++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == SOUTH_STRAIGHT){
+						M->car->current_lane = SOUTH_STRAIGHT;
+						num_out_south_straight++;
+						M->car->sent_back++;
+					}
+					else if(M->car->arrived_from == WEST_LEFT){
+						M->car->current_lane = SOUTH_RIGHT;
+						num_out_south_right++;
+						M->car->sent_back++;
+					}
+				}
 			break;
 		}
 
@@ -558,6 +682,6 @@ void Interseciton_RC_EventHandler(Intersection_State *SV, tw_bf *CV, Msg_Data *M
 
 }
 
-void Airport_Statistics_CollectStats(Airport_State *SV, tw_lp * lp) {
+void Intersection_Statistics_CollectStats(Airport_State *SV, tw_lp * lp) {
 	NumLanded += SV->NumLanded;
 }
